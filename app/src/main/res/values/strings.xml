@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">TelegramContest</string>
+    <string name="main_title">Statistics</string>
+    <string name="followers">Followers</string>
+    <string name="menu_item_dark_mode">Dark mode</string>
+    <string name="menu_item_next_graph">Next graph</string>
+    <string name="menu_item_prev_graph">Previous graph</string>
+    <string name="empty_text">Please select a graph</string>
+</resources>

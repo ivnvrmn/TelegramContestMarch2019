@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="margin_default">8dp</dimen>
+    <dimen name="margin_default_x2">16dp</dimen>
+
+    <dimen name="shadow_size">2dp</dimen>
+    <dimen name="select_rect_side_width">4dp</dimen>
+    <dimen name="select_rect_top_width">1dp</dimen>
+    <dimen name="added_touch_area">20dp</dimen>
+    <dimen name="chart_names_list_text_size">22sp</dimen>
+    <dimen name="picked_date_circle_radius">4dp</dimen>
+    <dimen name="empty_text_size">18sp</dimen>
+    <dimen name="check_box_text_padding">12dp</dimen>
+
+    <dimen name="chart_title_text_size">16sp</dimen>
+    <dimen name="chart_guideline_thickness">1dp</dimen>
+    <dimen name="chart_picked_date_line_thickness">1dp</dimen>
+    <dimen name="chart_padding">16dp</dimen>
+    <dimen name="chart_padding_bottom_top">32dp</dimen>
+    <dimen name="chart_graph_thickness">2dp</dimen>
+    <dimen name="chart_dimensions_text_size">12sp</dimen>
+    <dimen name="chart_y_text_margin">6dp</dimen>
+    <dimen name="chart_between_dates_margin">18dp</dimen>
+    <dimen name="chart_date_text_top_margin">18dp</dimen>
+    <dimen name="chart_slider_view_height">40dp</dimen>
+    <dimen name="chart_slider_graph_thickness">1dp</dimen>
+
+    <dimen name="info_rect_width">88dp</dimen>
+    <dimen name="info_rect_height">61dp</dimen>
+    <dimen name="info_rect_top_margin">22dp</dimen>
+    <dimen name="info_rect_corner_radius">4dp</dimen>
+    <dimen name="info_rect_stroke_thickness">0.1dp</dimen>
+    <dimen name="info_rect_shadow_radius">2dp</dimen>
+    <dimen name="info_rect_shadow_y_position">1dp</dimen>
+    <dimen name="info_rect_default_shift">16dp</dimen>
+    <dimen name="info_rect_date_text_size">11sp</dimen>
+    <dimen name="info_rect_date_text_margin">8dp</dimen>
+    <dimen name="info_rect_date_text_top_margin">16dp</dimen>
+    <dimen name="info_rect_point_text_size">14sp</dimen>
+    <dimen name="info_rect_point_text_margin">8dp</dimen>
+    <dimen name="info_rect_point_text_top_margin">38dp</dimen>
+    <dimen name="info_rect_point_name_text_size">10sp</dimen>
+    <dimen name="info_rect_additional_height">34dp</dimen>
+    <dimen name="info_rect_half_additional_height">14dp</dimen>
+</resources>

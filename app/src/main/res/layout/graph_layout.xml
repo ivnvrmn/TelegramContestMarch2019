@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/main_background_color"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_default_x2"
+        android:layout_marginTop="@dimen/margin_default_x2"
+        android:text="@string/followers"
+        android:textColor="@color/title_text_color"
+        android:textSize="@dimen/chart_title_text_size"
+        android:textStyle="bold" />
+
+    <com.rmnivnv.telegramcontest.views.ChartView
+        android:id="@+id/chart_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_default_x2"
+        android:layout_marginTop="@dimen/margin_default_x2"
+        android:layout_marginEnd="@dimen/margin_default_x2" />
+
+    <com.rmnivnv.telegramcontest.views.ChartSliderView
+        android:id="@+id/chart_slider_view"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/chart_slider_view_height"
+        android:layout_marginStart="@dimen/margin_default_x2"
+        android:layout_marginTop="@dimen/margin_default_x2"
+        android:layout_marginEnd="@dimen/margin_default_x2" />
+
+    <ListView
+        android:id="@+id/graph_names_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_default_x2"
+        android:layout_marginTop="@dimen/margin_default_x2"
+        android:layout_marginEnd="@dimen/margin_default_x2" />
+
+    <include layout="@layout/shadow" />
+
+</LinearLayout>

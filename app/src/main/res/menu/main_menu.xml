@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_prev"
+        android:title="@string/menu_item_prev_graph"
+        android:icon="@drawable/ic_navigate_before"
+        android:showAsAction="ifRoom"/>
+    <item
+        android:id="@+id/menu_next"
+        android:title="@string/menu_item_next_graph"
+        android:icon="@drawable/ic_navigate_next"
+        android:showAsAction="ifRoom"/>
+    <item
+        android:id="@+id/menu_dark"
+        android:title="@string/menu_item_dark_mode"
+        android:icon="@drawable/ic_brightness"
+        android:showAsAction="ifRoom"/>
+</menu>
