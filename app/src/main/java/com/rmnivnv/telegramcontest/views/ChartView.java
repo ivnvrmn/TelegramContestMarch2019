@@ -2,6 +2,7 @@ package com.rmnivnv.telegramcontest.views;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
+import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -18,6 +19,7 @@ import com.rmnivnv.telegramcontest.R;
 import com.rmnivnv.telegramcontest.ScaleListener;
 import com.rmnivnv.telegramcontest.model.ChartType;
 import com.rmnivnv.telegramcontest.model.GraphData;
+import com.rmnivnv.telegramcontest.utils.AnimationEndListener;
 import com.rmnivnv.telegramcontest.utils.ThemeChecker;
 
 import java.text.SimpleDateFormat;
@@ -38,6 +40,14 @@ public class ChartView extends View implements ScaleListener {
     private static final long PREVIOUS_MAX_DEFAULT = -1;
     private static final String X_DATE_FORMAT_PATTERN = "MMM dd";
     private static final String INFO_RECT_DATE_FORMAT_PATTERN = "EEE, MMM dd";
+    private static final String PROPERTY_GO_UP = "propertyGoUp";
+    private static final String PROPERTY_COME_FROM_DOWN = "propertyComeFromDown";
+    private static final String PROPERTY_COME_FROM_UP = "propertyComeFromUp";
+    private static final String PROPERTY_ALPHA_UP = "propertyAlphaUp";
+    private static final String PROPERTY_ALPHA_DOWN = "propertyAlphaDown";
+    private static final String PROPERTY_HIGH_TO_LOW_HEIGHT = "propertyHighToLowHeight";
+    private static final String PROPERTY_LOW_TO_HIGH_HEIGHT = "propertyLowToHighHeight";
+    private static final String PROPERTY_GO_DOWN = "propertyGoDown";
 
     private List<GraphData> graphs = new ArrayList<>();
     private ThemeChecker themeChecker;
@@ -54,8 +64,14 @@ public class ChartView extends View implements ScaleListener {
     private ValueAnimator comeFromUpAnimator;
     private ValueAnimator alphaUpAnimator;
     private ValueAnimator alphaDownAnimator;
-    private AnimatorSet deleteBiggerGraphAnimatorSet;
-    private AnimatorSet addNewBiggerGraphAnimatorSet;
+    private ValueAnimator deleteBiggerGraphAnimator;
+    private ValueAnimator addNewBiggerGraphAnimator;
+    private PropertyValuesHolder goUpProperty = PropertyValuesHolder.ofFloat(PROPERTY_GO_UP, 1, 3);
+    private PropertyValuesHolder comeFromUpProperty = PropertyValuesHolder.ofFloat(PROPERTY_COME_FROM_UP, 3, 1);
+    private PropertyValuesHolder comeFromDownProperty = PropertyValuesHolder.ofFloat(PROPERTY_COME_FROM_DOWN, 0, 1);
+    private PropertyValuesHolder alphaUpProperty = PropertyValuesHolder.ofInt(PROPERTY_ALPHA_UP, 0, 255);
+    private PropertyValuesHolder alphaDownProperty = PropertyValuesHolder.ofInt(PROPERTY_ALPHA_DOWN, 255, 0);
+    private PropertyValuesHolder goDownProperty = PropertyValuesHolder.ofFloat(PROPERTY_GO_DOWN, 1, 0);
     private AnimatorSet showEmptyTextAnimatorSet;
     private AnimatorSet hideEmptyTextAnimatorSet;
     private AnimatorSet linesFromUpToDownAnimatorSet;
@@ -212,7 +228,6 @@ public class ChartView extends View implements ScaleListener {
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                biggerGraphToDelete = null;
                 if (isAnimateFromDownToUp) {
                     isAnimateFromDownToUp = false;
                 }
@@ -239,7 +254,6 @@ public class ChartView extends View implements ScaleListener {
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                newBiggerGraph = null;
                 if (isAnimateFromUpToDown) {
                     isAnimateFromUpToDown = false;
                 }
@@ -359,13 +373,43 @@ public class ChartView extends View implements ScaleListener {
             public void onAnimationRepeat(Animator animation) { }
         });
 
-        deleteBiggerGraphAnimatorSet = new AnimatorSet();
-        deleteBiggerGraphAnimatorSet.setDuration(DEFAULT_ANIMATION_DURATION);
-        deleteBiggerGraphAnimatorSet.setInterpolator(new AccelerateInterpolator());
+        deleteBiggerGraphAnimator = new DefaultValueAnimator();
+        deleteBiggerGraphAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                goUpValue = (float) animation.getAnimatedValue(PROPERTY_GO_UP);
+                comeFromDownValue = (float) animation.getAnimatedValue(PROPERTY_COME_FROM_DOWN);
+                alphaUpValue = (int) animation.getAnimatedValue(PROPERTY_ALPHA_UP);
+                alphaDownValue = (int) animation.getAnimatedValue(PROPERTY_ALPHA_DOWN);
+                highToLowHeightValue = (int) animation.getAnimatedValue(PROPERTY_HIGH_TO_LOW_HEIGHT);
+                invalidate();
+            }
+        });
+        deleteBiggerGraphAnimator.addListener(new AnimationEndListener() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                biggerGraphToDelete = null;
+            }
+        });
 
-        addNewBiggerGraphAnimatorSet = new AnimatorSet();
-        addNewBiggerGraphAnimatorSet.setDuration(DEFAULT_ANIMATION_DURATION);
-        addNewBiggerGraphAnimatorSet.setInterpolator(new AccelerateInterpolator());
+        addNewBiggerGraphAnimator = new DefaultValueAnimator();
+        addNewBiggerGraphAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                goDownValue = (float) animation.getAnimatedValue(PROPERTY_GO_DOWN);
+                comeFromUpValue = (float) animation.getAnimatedValue(PROPERTY_COME_FROM_UP);
+                alphaUpValue = (int) animation.getAnimatedValue(PROPERTY_ALPHA_UP);
+                alphaDownValue = (int) animation.getAnimatedValue(PROPERTY_ALPHA_DOWN);
+                lowToHighHeightValue = (int) animation.getAnimatedValue(PROPERTY_LOW_TO_HIGH_HEIGHT);
+                invalidate();
+            }
+        });
+        addNewBiggerGraphAnimator.addListener(new AnimationEndListener() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                newBiggerGraph = null;
+            }
+        });
 
         showEmptyTextAnimatorSet = new AnimatorSet();
         showEmptyTextAnimatorSet.setDuration(DEFAULT_ANIMATION_DURATION);
@@ -433,16 +477,10 @@ public class ChartView extends View implements ScaleListener {
             biggerGraphToDelete = graph;
             graphToDeleteMaxValue = deleteMaxYSelectedRange;
 
-            ValueAnimator highToLowHeightAnimator = ValueAnimator.ofInt((int) graphToDeleteMaxValue,
-                    (int) maxYSelectedRange);
-            highToLowHeightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    highToLowHeightValue = (int) animation.getAnimatedValue();
-                }
-            });
-            deleteBiggerGraphAnimatorSet.playTogether(goUpAnimator, comeFromDownAnimator, alphaUpAnimator,
-                    alphaDownAnimator, highToLowHeightAnimator);
+            PropertyValuesHolder highToLowHeightProperty = PropertyValuesHolder.ofInt(
+                    PROPERTY_HIGH_TO_LOW_HEIGHT, (int) graphToDeleteMaxValue, (int) maxYSelectedRange);
+            deleteBiggerGraphAnimator.setValues(highToLowHeightProperty, goUpProperty,
+                    comeFromDownProperty, alphaUpProperty, alphaDownProperty);
         } else {
             biggerGraphToDelete = null;
             smallGraphToDelete = graph;
@@ -457,17 +495,10 @@ public class ChartView extends View implements ScaleListener {
             newBiggerGraph = graph;
             withoutBiggerMaxValue = findMaxValueWithoutGraph(newBiggerGraph);
 
-            ValueAnimator lowToHighHeightAnimator = ValueAnimator.ofInt((int) withoutBiggerMaxValue, (int) newGraphMaxY);
-            lowToHighHeightAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    lowToHighHeightValue = (int) animation.getAnimatedValue();
-                }
-            });
-
-
-            addNewBiggerGraphAnimatorSet.playTogether(goDownAnimator, comeFromUpAnimator, alphaUpAnimator,
-                    alphaDownAnimator, lowToHighHeightAnimator);
+            PropertyValuesHolder lowToHighHeightProperty = PropertyValuesHolder.ofInt(
+                    PROPERTY_LOW_TO_HIGH_HEIGHT, (int) withoutBiggerMaxValue, (int) newGraphMaxY);
+            addNewBiggerGraphAnimator.setValues(goDownProperty, comeFromUpProperty, alphaUpProperty,
+                    alphaDownProperty, lowToHighHeightProperty);
         } else {
             newBiggerGraph = null;
             newSmallGraph = graph;
@@ -476,9 +507,9 @@ public class ChartView extends View implements ScaleListener {
 
     public void update() {
         if (biggerGraphToDelete != null) {
-            deleteBiggerGraphAnimatorSet.start();
+            deleteBiggerGraphAnimator.start();
         } else if (newBiggerGraph != null) {
-            addNewBiggerGraphAnimatorSet.start();
+            addNewBiggerGraphAnimator.start();
         } else if (smallGraphToDelete != null) {
             alphaDownAnimator.start();
         } else if (newSmallGraph != null) {
