@@ -13,6 +13,7 @@ import com.rmnivnv.telegramcontest.R;
 import com.rmnivnv.telegramcontest.ScaleListener;
 import com.rmnivnv.telegramcontest.model.ChartType;
 import com.rmnivnv.telegramcontest.model.GraphData;
+import com.rmnivnv.telegramcontest.model.GraphDataY;
 import com.rmnivnv.telegramcontest.model.TouchRangeType;
 import com.rmnivnv.telegramcontest.utils.ThemeChecker;
 
@@ -118,15 +119,15 @@ public class ChartSliderView extends View {
             setPaintToGraphs();
             for (GraphData graph : graphs) {
                 if (graph.getChartType().equals(ChartType.LINE)) {
-                    float totalPoints = graph.getPoints().size();
+                    float totalPoints = ((GraphDataY) graph).getPoints().size();
                     float sectionDistance = width / (totalPoints - 1);
                     float startX = 0;
-                    float startY = height - one * graph.getPoints().get(0);
+                    float startY = height - one * ((GraphDataY) graph).getPoints().get(0);
 
                     path.reset();
                     path.moveTo(startX, startY);
                     for (int i = 1; i < totalPoints; i++) {
-                        float top = height - (one * graph.getPoints().get(i));
+                        float top = height - (one * ((GraphDataY) graph).getPoints().get(i));
                         path.lineTo(startX + sectionDistance, top);
                         startX = startX + sectionDistance;
                     }
@@ -168,7 +169,7 @@ public class ChartSliderView extends View {
         long maxValue = 0;
         for (GraphData graph : graphs) {
             if (graph.getChartType().equals(ChartType.LINE)) {
-                long temp = Collections.max(graph.getPoints());
+                long temp = Collections.max(((GraphDataY) graph).getPoints());
                 if (temp > maxValue) {
                     maxValue = temp;
                 }

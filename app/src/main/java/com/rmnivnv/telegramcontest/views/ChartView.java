@@ -19,6 +19,8 @@ import com.rmnivnv.telegramcontest.R;
 import com.rmnivnv.telegramcontest.ScaleListener;
 import com.rmnivnv.telegramcontest.model.ChartType;
 import com.rmnivnv.telegramcontest.model.GraphData;
+import com.rmnivnv.telegramcontest.model.GraphDataX;
+import com.rmnivnv.telegramcontest.model.GraphDataY;
 import com.rmnivnv.telegramcontest.utils.AnimationEndListener;
 import com.rmnivnv.telegramcontest.utils.ThemeChecker;
 
@@ -51,10 +53,10 @@ public class ChartView extends View implements ScaleListener {
 
     private List<GraphData> graphs = new ArrayList<>();
     private ThemeChecker themeChecker;
-    private GraphData biggerGraphToDelete;
-    private GraphData newBiggerGraph;
-    private GraphData smallGraphToDelete;
-    private GraphData newSmallGraph;
+    private GraphDataY biggerGraphToDelete;
+    private GraphDataY newBiggerGraph;
+    private GraphDataY smallGraphToDelete;
+    private GraphDataY newSmallGraph;
     private Paint paint;
     private TextPaint textPaint;
     private Path path;
@@ -125,6 +127,8 @@ public class ChartView extends View implements ScaleListener {
     private float pickedDateXPosition = NOT_SELECTED;
     private float pickedPoint = NOT_SELECTED;
     private float pickedPointXPosition = NOT_SELECTED;
+    float leftRangePosition;
+    float rightRangePosition;
 
     private int infoRectShadowColor;
     private int infoRectDateTextColor;
@@ -463,13 +467,13 @@ public class ChartView extends View implements ScaleListener {
 
     public void setGraphs(List<GraphData> graphs) {
         this.graphs = graphs;
-        totalGraphsLength = graphs.get(0).getPoints().size();
+        totalGraphsLength = ((GraphDataY) graphs.get(0)).getPoints().size();
         previousMaxYSelectedRange = PREVIOUS_MAX_DEFAULT;
 
         invalidate();
     }
 
-    public void setGraphToDelete(GraphData graph) {
+    public void setGraphToDelete(GraphDataY graph) {
         long maxYSelectedRange = findMaxValueFromSelectedRange();
         long deleteMaxYSelectedRange = findMaxValueFromGraph(graph);
         if (maxYSelectedRange < deleteMaxYSelectedRange) {
@@ -487,7 +491,7 @@ public class ChartView extends View implements ScaleListener {
         }
     }
 
-    public void addGraph(GraphData graph) {
+    public void addGraph(GraphDataY graph) {
         long maxYSelectedRange = findMaxValueFromSelectedRange();
         long newGraphMaxY = findMaxValueFromGraph(graph);
         if (newGraphMaxY > maxYSelectedRange) {
@@ -566,7 +570,7 @@ public class ChartView extends View implements ScaleListener {
             float realTotalPoints = totalGraphsLength - 1;
             float sectionDistance = (width + addedLeftSpace + addedRightSpace) / realTotalPoints;
 
-            List<Long> datesList = getDatesList();
+            List<String> datesList = getDatesList();
             drawDates(canvas, datesList, gridBottom, addedLeftSpace, sectionDistance, realTotalPoints);
             drawSelectedDateVerticalLine(canvas, addedLeftSpace, sectionDistance, gridBottom);
 
@@ -580,7 +584,7 @@ public class ChartView extends View implements ScaleListener {
                     oneYStep, availableHeight, gridBottom, sectionDistance);
             deleteGraphs(canvas, leftRangePosition, addedLeftSpace, rightRangePosition, maxYSelectedRange,
                     availableHeight, oneYStep, gridBottom, sectionDistance);
-            drawSelectedDateInfoRect(canvas, datesList);
+//            drawSelectedDateInfoRect(canvas, datesList);
             drawEmptyView(canvas);
         }
     }
@@ -594,7 +598,7 @@ public class ChartView extends View implements ScaleListener {
         for (GraphData graph : graphs) {
             if (graph.getChartType().equals(ChartType.LINE)) {
                 for (int i = (int) leftRangePosition; i < rightRangePosition; i++) {
-                    long temp = graph.getPoints().get(i);
+                    long temp = ((GraphDataY) graph).getPoints().get(i);
                     if (temp > maxValue) {
                         maxValue = temp;
                     }
@@ -698,22 +702,23 @@ public class ChartView extends View implements ScaleListener {
         }
     }
 
-    private void drawDates(Canvas canvas, List<Long> datesList,  float gridBottom, float addedLeftSpace,
+    private void drawDates(Canvas canvas, List<String> datesList,  float gridBottom, float addedLeftSpace,
                            float sectionDistance, float realTotalPoints) {
         if (graphs.size() > 1) {
             setTextPaintToXYDimensions(ALPHA_DEFAULT);
 
             //draw first date
-            date.setTime(datesList.get(0));
-            canvas.drawText(xDateFormat.format(date), -addedLeftSpace, gridBottom + dateTopMargin, textPaint);
+//            date.setTime(datesList.get(0));
+            canvas.drawText(datesList.get(0), -addedLeftSpace, gridBottom + dateTopMargin, textPaint);
 
             //draw last date
-            date.setTime(datesList.get(datesList.size() - 1));
+//            date.setTime(datesList.get(datesList.size() - 1));
             textPaint.setTextAlign(Paint.Align.RIGHT);
             float xPos = sectionDistance * realTotalPoints - addedLeftSpace;
-            canvas.drawText(xDateFormat.format(date), xPos, gridBottom + dateTopMargin, textPaint);
+            canvas.drawText(datesList.get(datesList.size() - 1), xPos, gridBottom + dateTopMargin, textPaint);
 
-            float dateWidth = textPaint.measureText(xDateFormat.format(date));
+//            float dateWidth = textPaint.measureText(xDateFormat.format(date));
+            float dateWidth = textPaint.measureText(datesList.get(datesList.size() - 1));
             float availableWidth = sectionDistance * realTotalPoints - dateWidth;
             int datesCount = (int) (availableWidth / (dateWidth + betweenDatesDistance));
 
@@ -722,8 +727,8 @@ public class ChartView extends View implements ScaleListener {
             textPaint.setTextAlign(Paint.Align.CENTER);
             for (int i = 1; i < datesCount; i++) {
                 int datePosition = (int) (i * realTotalPoints / datesCount);
-                date.setTime(datesList.get(datePosition));
-                canvas.drawText(xDateFormat.format(date), dateXPosition, gridBottom + dateTopMargin, textPaint);
+//                date.setTime(datesList.get(datePosition));
+                canvas.drawText(datesList.get(datePosition), dateXPosition, gridBottom + dateTopMargin, textPaint);
                 dateXPosition += datesInterval;
             }
         }
@@ -743,12 +748,25 @@ public class ChartView extends View implements ScaleListener {
                             long maxYSelectedRange, float oneYStep, float availableHeight, float gridBottom,
                             float sectionDistance) {
         setPaintToGraphs();
+        int leftEdge;
+        if (leftRangePosition == 0 || leftRangePosition == 1) {
+            leftEdge = 0;
+        } else {
+            leftEdge = (int) leftRangePosition - 1;
+        }
+        int rightEdge;
+        if (rightRangePosition == totalGraphsLength - 1) {
+            rightEdge = (int) rightRangePosition;
+        } else {
+            rightEdge = (int) rightRangePosition + 1;
+        }
+
         for (GraphData graph : graphs) {
             if (graph.getChartType().equals(ChartType.LINE)) {
                 float startX = -addedLeftSpace;
 
-                float leftRealYValue = findLeftRealYValue(leftRangePosition, graph.getPoints());
-                float rightRealYValue = findRightRealYValue(rightRangePosition, graph.getPoints());
+                float leftRealYValue = findLeftRealYValue(leftRangePosition, ((GraphDataY) graph).getPoints());
+                float rightRealYValue = findRightRealYValue(rightRangePosition, ((GraphDataY) graph).getPoints());
 
                 if (leftRealYValue > maxYSelectedRange && leftRealYValue > rightRealYValue) {
                     oneYStep = availableHeight / leftRealYValue;
@@ -764,39 +782,95 @@ public class ChartView extends View implements ScaleListener {
                     oneYStep = availableHeight / lowToHighHeightValue;
                 }
 
-                float startY = gridBottom - oneYStep * graph.getPoints().get(0);
+                float startY = gridBottom - oneYStep * ((GraphDataY) graph).getPoints().get(0);
 
                 path.reset();
                 path.moveTo(startX, startY);
                 for (int i = 1; i < totalGraphsLength; i++) {
-                    float top = gridBottom - oneYStep * graph.getPoints().get(i);
-                    path.lineTo(startX + sectionDistance, top);
+                    float top = gridBottom - oneYStep * ((GraphDataY) graph).getPoints().get(i);
+                    if (i >= leftEdge && i <= rightEdge) {
+                        path.lineTo(startX + sectionDistance, top);
+                    }
                     startX += sectionDistance;
                 }
 
                 int graphColor = Color.parseColor(graph.getColor());
                 paint.setColor(graphColor);
-                checkIfThisANewGraphAndIfAddAlphaUp(graph);
+                checkIfThisANewGraphAndIfAddAlphaUp((GraphDataY) graph);
                 canvas.drawPath(path, paint);
 
                 //draw selected date circles
                 if (pickedDateXPosition != NOT_SELECTED) {
-                    float yPosition = gridBottom - (oneYStep * graph.getPoints().get((int) pickedPoint));
+                    float yPosition = gridBottom - (oneYStep * ((GraphDataY) graph).getPoints().get((int) pickedPoint));
 
                     setPaintToPickedDateFillCircle();
-                    checkIfThisANewGraphAndIfAddAlphaUp(graph);
+                    checkIfThisANewGraphAndIfAddAlphaUp((GraphDataY) graph);
                     canvas.drawCircle(pickedPointXPosition, yPosition, pickedDateCircleRadius, paint);
 
                     setPaintToGraphs();
                     paint.setColor(graphColor);
-                    checkIfThisANewGraphAndIfAddAlphaUp(graph);
+                    checkIfThisANewGraphAndIfAddAlphaUp((GraphDataY) graph);
                     canvas.drawCircle(pickedPointXPosition, yPosition, pickedDateCircleRadius, paint);
                 }
             }
         }
+
+
+
+//        for (GraphData graph : graphs) {
+//            if (graph.getChartType().equals(ChartType.LINE)) {
+//                float startX = -addedLeftSpace;
+//
+//                float leftRealYValue = findLeftRealYValue(leftRangePosition, ((GraphDataY) graph).getPoints());
+//                float rightRealYValue = findRightRealYValue(rightRangePosition, ((GraphDataY) graph).getPoints());
+//
+//                if (leftRealYValue > maxYSelectedRange && leftRealYValue > rightRealYValue) {
+//                    oneYStep = availableHeight / leftRealYValue;
+//                } else if (rightRealYValue > maxYSelectedRange && rightRealYValue > leftRealYValue) {
+//                    oneYStep = availableHeight / rightRealYValue;
+//                }
+//
+//                if (biggerGraphToDelete != null) {
+//                    oneYStep = availableHeight / highToLowHeightValue;
+//                } else if (newBiggerGraph != null && newBiggerGraph.equals(graph)) {
+//                    oneYStep *= comeFromUpValue;
+//                } else if (newBiggerGraph != null) {
+//                    oneYStep = availableHeight / lowToHighHeightValue;
+//                }
+//
+//                float startY = gridBottom - oneYStep * ((GraphDataY) graph).getPoints().get(0);
+//
+//                path.reset();
+//                path.moveTo(startX, startY);
+//                for (int i = 1; i < totalGraphsLength; i++) {
+//                    float top = gridBottom - oneYStep * ((GraphDataY) graph).getPoints().get(i);
+//                    path.lineTo(startX + sectionDistance, top);
+//                    startX += sectionDistance;
+//                }
+//
+//                int graphColor = Color.parseColor(graph.getColor());
+//                paint.setColor(graphColor);
+//                checkIfThisANewGraphAndIfAddAlphaUp((GraphDataY) graph);
+//                canvas.drawPath(path, paint);
+//
+//                //draw selected date circles
+//                if (pickedDateXPosition != NOT_SELECTED) {
+//                    float yPosition = gridBottom - (oneYStep * ((GraphDataY) graph).getPoints().get((int) pickedPoint));
+//
+//                    setPaintToPickedDateFillCircle();
+//                    checkIfThisANewGraphAndIfAddAlphaUp((GraphDataY) graph);
+//                    canvas.drawCircle(pickedPointXPosition, yPosition, pickedDateCircleRadius, paint);
+//
+//                    setPaintToGraphs();
+//                    paint.setColor(graphColor);
+//                    checkIfThisANewGraphAndIfAddAlphaUp((GraphDataY) graph);
+//                    canvas.drawCircle(pickedPointXPosition, yPosition, pickedDateCircleRadius, paint);
+//                }
+//            }
+//        }
     }
 
-    private void checkIfThisANewGraphAndIfAddAlphaUp(GraphData graph) {
+    private void checkIfThisANewGraphAndIfAddAlphaUp(GraphDataY graph) {
         if ((newBiggerGraph != null && newBiggerGraph.equals(graph)) ||
                 (newSmallGraph != null && newSmallGraph.equals(graph))) {
             paint.setAlpha(alphaUpValue);
@@ -815,7 +889,7 @@ public class ChartView extends View implements ScaleListener {
         }
     }
 
-    private void deleteGraph(Canvas canvas, GraphData graphData, float startX, float leftRangePosition,
+    private void deleteGraph(Canvas canvas, GraphDataY graphData, float startX, float leftRangePosition,
                              float rightRangePosition, long maxYSelectedRange, float availableHeight,
                              float oneYStep, float gridBottom, float sectionDistance) {
         float leftRealYValue = findLeftRealYValue(leftRangePosition, graphData.getPoints());
@@ -870,7 +944,7 @@ public class ChartView extends View implements ScaleListener {
         for (GraphData graph : graphs) {
             if (graph.getChartType().equals(ChartType.LINE) && !graph.equals(graphData)) {
                 for (int i = (int) leftRangePosition; i < rightRangePosition; i++) {
-                    long temp = graph.getPoints().get(i);
+                    long temp = ((GraphDataY) graph).getPoints().get(i);
                     if (temp > maxValue) {
                         maxValue = temp;
                     }
@@ -883,11 +957,11 @@ public class ChartView extends View implements ScaleListener {
     private long findMaxValueFromGraph(GraphData graph) {
         long maxValue = 0;
 
-        float leftRangePosition = totalGraphsLength / 100 * leftPercent;
-        float rightRangePosition = totalGraphsLength / 100 * rightPercent;
+        leftRangePosition = totalGraphsLength / 100 * leftPercent;
+        rightRangePosition = totalGraphsLength / 100 * rightPercent;
 
         for (int i = (int) leftRangePosition; i < rightRangePosition; i++) {
-            long temp = graph.getPoints().get(i);
+            long temp = ((GraphDataY) graph).getPoints().get(i);
             if (temp > maxValue) {
                 maxValue = temp;
             }
@@ -938,10 +1012,10 @@ public class ChartView extends View implements ScaleListener {
         return rightRealYValue;
     }
 
-    private List<Long> getDatesList() {
+    private List<String> getDatesList() {
         for (GraphData graph : graphs) {
-            if (graph.getChartType().equals(ChartType.X)) {
-                return graph.getPoints();
+            if (graph instanceof GraphDataX) {
+                return ((GraphDataX) graph).getDates();
             }
         }
 
@@ -958,7 +1032,7 @@ public class ChartView extends View implements ScaleListener {
             int addedBottomCount = 0;
             for (GraphData graphData : graphs) {
                 if (graphData.getChartType().equals(ChartType.LINE)) {
-                    long point = graphData.getPoints().get((int) pickedPoint);
+                    long point = ((GraphDataY) graphData).getPoints().get((int) pickedPoint);
                     if (point > MAX_ONE_LINE_POINT) {
                         addedBottomCount++;
                     }
@@ -998,13 +1072,13 @@ public class ChartView extends View implements ScaleListener {
             for (int i = 0; i < graphs.size(); i++) {
                 GraphData graphData = graphs.get(i);
                 if (graphData.getChartType().equals(ChartType.LINE)) {
-                    long point = graphData.getPoints().get((int) pickedPoint);
+                    long point = ((GraphDataY) graphData).getPoints().get((int) pickedPoint);
 
                     if (i > 1 && point > MAX_ONE_LINE_POINT) {
                         pointTop += infoRectAdditionalHeight;
                         pointLeft = infoRectStart + infoRectPointTextMargin;
                     } else if (i == 1 && point > MAX_ONE_LINE_POINT &&
-                            graphs.get(i - 1).getPoints().get((int) pickedPoint) <= MAX_ONE_LINE_POINT) {
+                            ((GraphDataY) graphs.get(i - 1)).getPoints().get((int) pickedPoint) <= MAX_ONE_LINE_POINT) {
                         pointTop += infoRectAdditionalHeight;
                         pointLeft = infoRectStart + infoRectPointTextMargin;
                     }

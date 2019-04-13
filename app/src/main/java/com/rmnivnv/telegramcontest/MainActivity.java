@@ -16,7 +16,11 @@ import android.widget.Toolbar;
 import com.rmnivnv.telegramcontest.model.ChartData;
 import com.rmnivnv.telegramcontest.model.ChartType;
 import com.rmnivnv.telegramcontest.model.Column;
+import com.rmnivnv.telegramcontest.model.ColumnX;
+import com.rmnivnv.telegramcontest.model.ColumnY;
 import com.rmnivnv.telegramcontest.model.GraphData;
+import com.rmnivnv.telegramcontest.model.GraphDataX;
+import com.rmnivnv.telegramcontest.model.GraphDataY;
 import com.rmnivnv.telegramcontest.utils.JsonParser;
 import com.rmnivnv.telegramcontest.utils.JsonParserImpl;
 import com.rmnivnv.telegramcontest.utils.ThemeChecker;
@@ -162,9 +166,9 @@ public class MainActivity extends Activity {
         GraphData clickedGraph = nameCharts.get(position);
         if (isOnMainView(clickedGraph)) {
             removeFromMainCharts(clickedGraph);
-            chartView.setGraphToDelete(clickedGraph);
+            chartView.setGraphToDelete((GraphDataY) clickedGraph);
         } else {
-            chartView.addGraph(clickedGraph);
+            chartView.addGraph((GraphDataY) clickedGraph);
             mainCharts.add(clickedGraph);
         }
 
@@ -185,10 +189,16 @@ public class MainActivity extends Activity {
 
         for (Map.Entry<String, ChartType> entry : chartData.getTypes().entrySet()) {
             String name = entry.getKey();
-            List<Long> points = getPointsByName(name, chartData.getColumns());
             String color = chartData.getColors().get(name);
             String graphName = chartData.getNames().get(name);
-            graphs.add(new GraphData(points, color, graphName, entry.getValue()));
+            ChartType chartType = entry.getValue();
+            if (chartType.equals(ChartType.X)) {
+                List<String> dates = getDates(chartData.getColumns());
+                graphs.add(new GraphDataX(color, graphName, entry.getValue(), dates));
+            } else {
+                List<Long> points = getPointsByName(name, chartData.getColumns());
+                graphs.add(new GraphDataY(color, graphName, entry.getValue(), points));
+            }
         }
 
         return graphs;
@@ -205,10 +215,10 @@ public class MainActivity extends Activity {
         }
 
         for (String name : chartNames) {
-            List<Long> points = getPointsByName(name, chartData.getColumns());
             String color = chartData.getColors().get(name);
             String graphName = chartData.getNames().get(name);
-            graphs.add(new GraphData(points, color, graphName, ChartType.LINE));
+            List<Long> points = getPointsByName(name, chartData.getColumns());
+            graphs.add(new GraphDataY(color, graphName, ChartType.LINE, points));
         }
 
         return graphs;
@@ -217,7 +227,16 @@ public class MainActivity extends Activity {
     private List<Long> getPointsByName(String name, List<Column> columns) {
         for (Column column : columns) {
             if (name.equals(column.getName())) {
-                return column.getData();
+                return ((ColumnY) column).getData();
+            }
+        }
+        return null;
+    }
+
+    private List<String> getDates(List<Column> columns) {
+        for (Column column : columns) {
+            if (column instanceof ColumnX) {
+                return ((ColumnX) column).getDates();
             }
         }
         return null;

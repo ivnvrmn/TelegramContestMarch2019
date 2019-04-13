@@ -1,22 +1,14 @@
 package com.rmnivnv.telegramcontest.model;
 
-import java.util.List;
-
-public class GraphData {
-    private List<Long> points;
+public abstract class GraphData {
     private String color;
     private String name;
     private ChartType chartType;
 
-    public GraphData(List<Long> points, String color, String name, ChartType chartType) {
-        this.points = points;
+    public GraphData(String color, String name, ChartType chartType) {
         this.color = color;
         this.name = name;
         this.chartType = chartType;
-    }
-
-    public List<Long> getPoints() {
-        return points;
     }
 
     public String getColor() {

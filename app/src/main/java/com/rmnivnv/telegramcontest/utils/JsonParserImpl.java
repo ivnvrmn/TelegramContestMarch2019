@@ -5,6 +5,8 @@ import android.content.Context;
 import com.rmnivnv.telegramcontest.model.ChartData;
 import com.rmnivnv.telegramcontest.model.ChartType;
 import com.rmnivnv.telegramcontest.model.Column;
+import com.rmnivnv.telegramcontest.model.ColumnX;
+import com.rmnivnv.telegramcontest.model.ColumnY;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -13,10 +15,13 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class JsonParserImpl implements JsonParser {
@@ -26,10 +31,15 @@ public class JsonParserImpl implements JsonParser {
     private static final String KEY_TYPES = "types";
     private static final String KEY_NAMES = "names";
     private static final String KEY_COLORS = "colors";
+    private static final String DATE_FORMAT_PATTERN = "MMM dd";
     private Context context;
+    private Date date;
+    private SimpleDateFormat dateFormat;
 
     public JsonParserImpl(Context context) {
         this.context = context;
+        date = new Date();
+        dateFormat = new SimpleDateFormat(DATE_FORMAT_PATTERN, Locale.US);
     }
 
     @Override
@@ -76,12 +86,21 @@ public class JsonParserImpl implements JsonParser {
         for (int j = 0; j < columnsJsonArray.length(); j++) {
             JSONArray columnPointsJsonArray = columnsJsonArray.getJSONArray(j);
             String name = columnPointsJsonArray.getString(0);
-            List<Long> points = new ArrayList<>();
             columnPointsJsonArray.remove(0);
-            for (int k = 0; k < columnPointsJsonArray.length(); k++) {
-                points.add(columnPointsJsonArray.getLong(k));
+            if (name.equals("x")) {
+                List<String> dates = new ArrayList<>();
+                for (int k = 0; k < columnPointsJsonArray.length(); k++) {
+                    date.setTime(columnPointsJsonArray.getLong(k));
+                    dates.add(dateFormat.format(date));
+                }
+                columnList.add(new ColumnX(name, dates));
+            } else {
+                List<Long> points = new ArrayList<>();
+                for (int k = 0; k < columnPointsJsonArray.length(); k++) {
+                    points.add(columnPointsJsonArray.getLong(k));
+                }
+                columnList.add(new ColumnY(name, points));
             }
-            columnList.add(new Column(name, points));
         }
         return columnList;
     }
